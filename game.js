@@ -35,6 +35,9 @@ const player2 = {
     score: 0
 };
 
+// Ball speed setting
+let ballSpeedSetting = 5;
+
 // Ball
 const ball = {
     x: canvas.width / 2,
@@ -74,6 +77,23 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     resetGame();
 });
 
+// Ball speed slider
+const ballSpeedSlider = document.getElementById('ballSpeed');
+const ballSpeedValue = document.getElementById('ballSpeedValue');
+
+ballSpeedSlider.addEventListener('input', (e) => {
+    ballSpeedSetting = parseInt(e.target.value);
+    ballSpeedValue.textContent = ballSpeedSetting;
+    // Update ball speed if game is running
+    if (gameRunning && !gamePaused) {
+        const currentSpeed = Math.sqrt(ball.speedX * ball.speedX + ball.speedY * ball.speedY);
+        const angle = Math.atan2(ball.speedY, ball.speedX);
+        ball.speed = ballSpeedSetting;
+        ball.speedX = Math.cos(angle) * ball.speed;
+        ball.speedY = Math.sin(angle) * ball.speed;
+    }
+});
+
 function startGame() {
     gameRunning = true;
     gamePaused = false;
@@ -98,6 +118,8 @@ function resetGame() {
 function resetBall() {
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
+    // Use current ball speed setting
+    ball.speed = ballSpeedSetting;
     // Random direction
     const angle = (Math.random() * Math.PI / 3) - Math.PI / 6; // -30 to 30 degrees
     ball.speedX = Math.cos(angle) * ball.speed;
@@ -148,10 +170,18 @@ function updateBall() {
         ball.x - ball.radius >= player1.x &&
         ball.y >= player1.y &&
         ball.y <= player1.y + player1.height) {
-        ball.speedX = Math.abs(ball.speedX);
+        // Maintain current speed setting
+        const currentSpeed = Math.abs(ball.speedX);
+        ball.speedX = currentSpeed;
         // Add spin based on where ball hits paddle
         const hitPos = (ball.y - player1.y) / player1.height;
-        ball.speedY = (hitPos - 0.5) * 10;
+        ball.speedY = (hitPos - 0.5) * ballSpeedSetting * 2;
+        // Normalize speed to maintain ball speed setting
+        const speed = Math.sqrt(ball.speedX * ball.speedX + ball.speedY * ball.speedY);
+        if (speed > 0) {
+            ball.speedX = (ball.speedX / speed) * ballSpeedSetting;
+            ball.speedY = (ball.speedY / speed) * ballSpeedSetting;
+        }
     }
 
     // Player 2 paddle
@@ -159,10 +189,18 @@ function updateBall() {
         ball.x + ball.radius <= player2.x + player2.width &&
         ball.y >= player2.y &&
         ball.y <= player2.y + player2.height) {
-        ball.speedX = -Math.abs(ball.speedX);
+        // Maintain current speed setting
+        const currentSpeed = Math.abs(ball.speedX);
+        ball.speedX = -currentSpeed;
         // Add spin based on where ball hits paddle
         const hitPos = (ball.y - player2.y) / player2.height;
-        ball.speedY = (hitPos - 0.5) * 10;
+        ball.speedY = (hitPos - 0.5) * ballSpeedSetting * 2;
+        // Normalize speed to maintain ball speed setting
+        const speed = Math.sqrt(ball.speedX * ball.speedX + ball.speedY * ball.speedY);
+        if (speed > 0) {
+            ball.speedX = (ball.speedX / speed) * ballSpeedSetting;
+            ball.speedY = (ball.speedY / speed) * ballSpeedSetting;
+        }
     }
 
     // Score points
